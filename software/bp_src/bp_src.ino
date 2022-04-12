@@ -29,6 +29,32 @@ Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 #define DP_PRINT(x) display.print(F(x))       //use F(X) to save the string to Flash
 
 
+///////////////////////////////////////////////
+// KEYPAD SENSOR
+///////////////////////////////////////////////
+//https://arduinogetstarted.com/tutorials/arduino-keypad
+#include <Keypad.h>
+
+const int ROW_NUM = 4; //four rows
+const int COLUMN_NUM = 3; //three columns
+
+char keys[ROW_NUM][COLUMN_NUM] = {
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
+};
+
+byte pin_rows[ROW_NUM] = {A3, 7, 6, 4}; //connect to the row pinouts of the keypad
+byte pin_column[COLUMN_NUM] = {A4, A2, 5}; //connect to the column pinouts of the keypad
+
+Keypad keypad = Keypad( makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM );
+
+String password = "1234"; // change your password here
+String input_password;
+bool getcode = false;
+
+
 ///////////////////////////////////
 //        GAME SETTINGS          //
 ///////////////////////////////////
@@ -47,6 +73,8 @@ void start_screen();
 void handle_input();
 void wait_and_select_input();
 void game_over();
+bool keypad_logic();
+String randompasscode();
 
 enum states {
   START_SCREEN,
@@ -65,7 +93,7 @@ enum inputs {
 
 State states[] = {start_screen, handle_input, wait_and_select_input, game_over};
 
-inputs input = 0;
+inputs input = (inputs)0;
 int current_state = 0;
 int next_state = 0;
 int score = 0;
@@ -103,11 +131,20 @@ void setup() {
     
   }
 
+  //keypad
+  Serial.begin(9600);
+  input_password.reserve(32); // maximum input characters is 33, change if needed
+
 }
 
 void loop() {
   current_state = next_state;
   states[current_state]();
+
+  while(getcode==true)
+  {
+    getcode = keypad_logic();
+  }
 }
 
 
@@ -130,7 +167,7 @@ void start_screen() {
 }
 
 void wait_and_select_input(){
-  input = rand()%NUM_INPUTS;
+  input = (inputs)(rand()%NUM_INPUTS);
   delay(delay_ms);
 }
 
@@ -151,6 +188,43 @@ void game_over(){
   
 }
 
+bool keypad_logic(){
+  char key = keypad.getKey();
+
+  if (key){
+    Serial.println(key);
+
+    if(key == '*') {
+      input_password = ""; // clear input password
+    } else if(key == '#') {
+      if(password == input_password) {
+        Serial.println("password is correct");
+        password = randompasscode();        
+        Serial.println("generating new passcode " + password);
+        return false;
+      } else {
+        Serial.println("password is incorrect, try again");
+      }
+
+      input_password = ""; // clear input password
+    } else {
+      input_password += key; // append new character to input password string
+    }
+  }
+}
+
+String randompasscode(){
+  String pass = "";
+  
+  for(int i=0; i<4; i++)
+  {
+    int digit = (rand()%9)+1;
+    String digitchar = String(digit);
+    pass += digitchar;
+  }
+
+  return pass;
+}
 
 //  DP_PRINTLN("This is how you print a new line");
 //  display.display();  //call this to flash to the display
