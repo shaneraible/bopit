@@ -101,6 +101,14 @@ bool over = false;
 
 ////////////////////////////////////
 
+void reset_display(){
+  display.clearDisplay(); //use this to clear display
+
+  //clear display resets all settings, configure text:
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0); //cursor start in top left
+}
 
 void setup() {
   Serial.begin(9600);
@@ -115,21 +123,22 @@ void setup() {
   finger.begin(57600);
 //  delay(5);
   finger.LEDcontrol(FINGERPRINT_LED_FLASHING, 25, FINGERPRINT_LED_RED, 10);
+  display.clearDisplay();
 
-  // set the data rate for the sensor serial port
-  if (finger.verifyPassword()) {
-    DP_PRINTLN("Found fingerprint sensor!");
-    display.display();
-    delay(300);
-    display.clearDisplay();
-  } else {
-    DP_PRINTLN("Did not find fingerprint sensor :(");
-    display.display();
-    delay(300);
-    display.clearDisplay();
-    while (!finger.verifyPassword()) { delay(1); }
-    
-  }
+//  // set the data rate for the sensor serial port
+//  if (finger.verifyPassword()) {
+//    DP_PRINTLN("Found fingerprint sensor!");
+//    display.display();
+//    delay(300);
+//    display.clearDisplay();
+//  } else {
+//    DP_PRINTLN("Did not find fingerprint sensor :(");
+//    display.display();
+//    delay(300);
+//    display.clearDisplay();
+//    while (!finger.verifyPassword()) { delay(1); }
+//    
+//  }
 
   //keypad
   Serial.begin(9600);
@@ -149,7 +158,7 @@ void loop() {
 
 
 bool check_start_input(){
-  delay(1);
+  delay(10);
   return true;
 }
 void start_screen() {
@@ -167,12 +176,38 @@ void start_screen() {
 }
 
 void wait_and_select_input(){
-  input = (inputs)(rand()%NUM_INPUTS);
-  delay(delay_ms);
+  reset_display();
+  
+  if(!over && score < 100){
+    input = rand()%NUM_INPUTS;
+    delay(delay_ms);
+    switch(input){
+      case FINGERPRINT_SCANNER:
+        DP_PRINTLN("Scan it!");
+        break;
+      case KEYPAD:
+        DP_PRINTLN("Password it!");
+        break;
+      case MICROPHONE:
+        DP_PRINTLN("Speak it!");
+        break;
+    }
+
+    display.display();
+    next_state = handle_input();
+  }
+  else{
+    next_state = GAME_OVER;
+  }
 }
 
 
 void handle_input(){
+  reset_display();
+  DP_PRINTLN("handling input");
+  display.display();
+  delay(100);
+  
   switch(input){
     case FINGERPRINT_SCANNER:
       //call fingerprint scanner fn
