@@ -101,14 +101,6 @@ bool over = false;
 
 ////////////////////////////////////
 
-void reset_display(){
-  display.clearDisplay(); //use this to clear display
-
-  //clear display resets all settings, configure text:
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0); //cursor start in top left
-}
 
 void setup() {
   Serial.begin(9600);
@@ -123,22 +115,25 @@ void setup() {
   finger.begin(57600);
 //  delay(5);
   finger.LEDcontrol(FINGERPRINT_LED_FLASHING, 25, FINGERPRINT_LED_RED, 10);
-  display.clearDisplay();
 
-//  // set the data rate for the sensor serial port
-//  if (finger.verifyPassword()) {
-//    DP_PRINTLN("Found fingerprint sensor!");
-//    display.display();
-//    delay(300);
-//    display.clearDisplay();
-//  } else {
-//    DP_PRINTLN("Did not find fingerprint sensor :(");
-//    display.display();
-//    delay(300);
-//    display.clearDisplay();
-//    while (!finger.verifyPassword()) { delay(1); }
-//    
-//  }
+  // set the data rate for the sensor serial port
+  if (finger.verifyPassword()) {
+    DP_PRINTLN("Found fingerprint sensor!");
+    display.display();
+    delay(300);
+    display.clearDisplay();
+  } else {
+    DP_PRINTLN("Did not find fingerprint sensor :(");
+    display.display();
+    delay(300);
+    display.clearDisplay();
+    while (!finger.verifyPassword()) { delay(1); }
+    
+  }
+
+  //keypad
+  Serial.begin(9600);
+  input_password.reserve(32); // maximum input characters is 33, change if needed
 
   //keypad
   Serial.begin(9600);
@@ -158,7 +153,7 @@ void loop() {
 
 
 bool check_start_input(){
-  delay(10);
+  delay(1);
   return true;
 }
 void start_screen() {
@@ -203,11 +198,6 @@ void wait_and_select_input(){
 
 
 void handle_input(){
-  reset_display();
-  DP_PRINTLN("handling input");
-  display.display();
-  delay(100);
-  
   switch(input){
     case FINGERPRINT_SCANNER:
       //call fingerprint scanner fn
