@@ -34,6 +34,32 @@ Adafruit_SSD1305 display(128, 64, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED
 #define DP_PRINT(x) Serial.print(F(x))       //use F(X) to save the string to Flash
 #endif
 
+///////////////////////////////////////////////
+// KEYPAD SENSOR
+///////////////////////////////////////////////
+//https://arduinogetstarted.com/tutorials/arduino-keypad
+#include <Keypad.h>
+
+const int ROW_NUM = 4; //four rows
+const int COLUMN_NUM = 3; //three columns
+
+char keys[ROW_NUM][COLUMN_NUM] = {
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
+};
+
+byte pin_rows[ROW_NUM] = {A3, 7, 6, 4}; //connect to the row pinouts of the keypad
+byte pin_column[COLUMN_NUM] = {A4, A2, 5}; //connect to the column pinouts of the keypad
+
+Keypad keypad = Keypad( makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM );
+
+String password = "1234"; // change your password here
+String input_password;
+bool getcode = false;
+
+
 ///////////////////////////////////
 //        GAME SETTINGS          //
 ///////////////////////////////////
@@ -52,6 +78,8 @@ void start_screen();
 void handle_input();
 void wait_and_select_input();
 void game_over();
+bool keypad_logic();
+String randompasscode();
 
 enum states {
   START_SCREEN,
@@ -111,7 +139,7 @@ void setup() {
   reset_display();
 
   background_sound = 1.30*analogRead(MIC_IN);
-
+  input_password.reserve(32); // maximum input characters is 33, change if needed
 }
 
 void loop() {
@@ -121,7 +149,7 @@ void loop() {
 
 
 bool check_start_input(){
-  delay(10);
+  delay(1);
   return true;
 }
 
@@ -139,7 +167,7 @@ void start_screen() {
 }
 
 void wait_and_select_input(){
-  reset_display();
+  //reset_display();
   
   if(!over && score < 100){
     input = rand()%NUM_INPUTS;
@@ -161,23 +189,24 @@ void wait_and_select_input(){
   else{
     next_state = GAME_OVER;
   }
-
 }
 
 
 void handle_input(){
+
   reset_display();
   
   DP_PRINTLN("handling input");
   delay(100);
   
+
   switch(input){
     case FINGERPRINT_SCANNER:
       //call fingerprint scanner fn
       break;
     case KEYPAD:
-      //call keypad function
-      break;
+      over = keypad_logic();
+      break
     case MICROPHONE:
       over = get_voice_input();
       break;
@@ -201,3 +230,44 @@ bool get_voice_input(){
 void game_over(){
   
 }
+
+bool keypad_logic(){
+  while(1){
+    char key = keypad.getKey();
+    if (key){
+      Serial.println(key);
+  
+      if(key == '*') {
+        input_password = ""; // clear input password
+      } else if(key == '#') {
+        if(password == input_password) {
+          Serial.println("password is correct");
+          password = randompasscode();        
+          Serial.println("generating new passcode " + password);
+          return false;
+        } else {
+          Serial.println("password is incorrect, try again");
+          return true;
+        }
+  
+        input_password = ""; // clear input password
+      } else {
+        input_password += key; // append new character to input password string
+      }
+    }
+  }
+}
+
+String randompasscode(){
+  String pass = "";
+  
+  for(int i=0; i<4; i++)
+  {
+    int digit = (rand()%9)+1;
+    String digitchar = String(digit);
+    pass += digitchar;
+  }
+
+  return pass;
+}
+
