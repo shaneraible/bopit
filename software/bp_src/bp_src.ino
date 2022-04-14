@@ -144,11 +144,6 @@ void setup() {
 void loop() {
   current_state = next_state;
   states[current_state]();
-
-  while(getcode==true)
-  {
-    getcode = keypad_logic();
-  }
 }
 
 
@@ -171,7 +166,7 @@ void start_screen() {
 }
 
 void wait_and_select_input(){
-  reset_display();
+  //reset_display();
   
   if(!over && score < 100){
     input = rand()%NUM_INPUTS;
@@ -202,7 +197,7 @@ void handle_input(){
     case FINGERPRINT_SCANNER:
       //call fingerprint scanner fn
     case KEYPAD:
-      //call keypad function
+        over = keypad_logic();
     case MICROPHONE:
       //call microphone function
       break;
@@ -214,26 +209,28 @@ void game_over(){
 }
 
 bool keypad_logic(){
-  char key = keypad.getKey();
-
-  if (key){
-    Serial.println(key);
-
-    if(key == '*') {
-      input_password = ""; // clear input password
-    } else if(key == '#') {
-      if(password == input_password) {
-        Serial.println("password is correct");
-        password = randompasscode();        
-        Serial.println("generating new passcode " + password);
-        return false;
+  while(1){
+    char key = keypad.getKey();
+    if (key){
+      Serial.println(key);
+  
+      if(key == '*') {
+        input_password = ""; // clear input password
+      } else if(key == '#') {
+        if(password == input_password) {
+          Serial.println("password is correct");
+          password = randompasscode();        
+          Serial.println("generating new passcode " + password);
+          return false;
+        } else {
+          Serial.println("password is incorrect, try again");
+          return true;
+        }
+  
+        input_password = ""; // clear input password
       } else {
-        Serial.println("password is incorrect, try again");
+        input_password += key; // append new character to input password string
       }
-
-      input_password = ""; // clear input password
-    } else {
-      input_password += key; // append new character to input password string
     }
   }
 }
