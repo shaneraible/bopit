@@ -15,23 +15,19 @@
 
 
 // Comment out if not using OLED
-//#define OLED
+#define OLED
 Adafruit_SSD1305 display(128, 64, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 
 /////////////////////////////////////
 // Utilities: 
 #ifdef OLED
-#define DP_PRINTLN(x) { \
-  display.println(F(x)); \  //use F(X) to save the string to Flash
-  display.display()
-}
-#define DP_PRINT(x) { \
-  display.print(F(x)); \  //use F(X) to save the string to Flash
-  display.display()
-}
+#define DP_PRINTLN(x) display.println(F(x))  //use F(X) to save the string to Flash
+#define DP_PRINT(x) display.print(F(x)) //use F(X) to save the string to Flash
+#define DISPLAY() display.display()
 #else
 #define DP_PRINTLN(x) Serial.println(F(x))   //use F(X) to save the string to Flash
 #define DP_PRINT(x) Serial.print(F(x))       //use F(X) to save the string to Flash
+#define DISPLAY()
 #endif
 
 ///////////////////////////////////////////////
@@ -65,6 +61,12 @@ bool getcode = false;
 ///////////////////////////////////
 #define START_DELAY 2000
 #define DELAY_STEP  100
+
+#define FINGERPRINT_TONE 600
+#define KEYPAD_TONE 200
+#define VOICE_TONE 400
+#define TONE_DURATION 100
+#define TONE_PIN 3
 
 int delay_ms = START_DELAY;
 
@@ -108,7 +110,7 @@ bool over = false;
 //          MICROPHONE            //
 ////////////////////////////////////
 #define MIC_IN A5
-#define BG_SCALE 1.3
+#define BG_SCALE 1.1
 
 bool get_voice_input();
 int background_sound = 0;
@@ -120,6 +122,7 @@ void reset_display(){
   display.clearDisplay(); //use this to clear display
 
   //clear display resets all settings, configure text:
+  display.setRotation(2);
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0,0); //cursor start in top left
@@ -127,8 +130,10 @@ void reset_display(){
 }
 
 void setup() {
+  #ifndef OLED
   Serial.begin(9600);
   while (! Serial) delay(100);
+  #endif
 
   #ifdef OLED
   if ( ! display.begin(0x3C) ) {
@@ -138,7 +143,11 @@ void setup() {
 
   reset_display();
 
-  background_sound = 1.30*analogRead(MIC_IN);
+  background_sound = BG_SCALE*analogRead(MIC_IN);
+  display.println(analogRead(MIC_IN));
+  display.println(background_sound);
+  display.display();
+  delay(500);
   input_password.reserve(32); // maximum input characters is 33, change if needed
 }
 
@@ -159,7 +168,7 @@ void start_screen() {
   
   DP_PRINTLN("Disarm-it!");
   DP_PRINTLN("Scan finger to start...");
-
+  DISPLAY();
 
   while(!check_start_input()){}
 
@@ -167,7 +176,8 @@ void start_screen() {
 }
 
 void wait_and_select_input(){
-  //reset_display();
+  reset_display();
+
   
   if(!over && score < 100){
     input = rand()%NUM_INPUTS;
@@ -175,15 +185,18 @@ void wait_and_select_input(){
     switch(input){
       case FINGERPRINT_SCANNER:
         DP_PRINTLN("Scan it!");
+        tone(TONE_PIN, FINGERPRINT_TONE, TONE_DURATION);
         break;
       case KEYPAD:
         DP_PRINTLN("Password it!");
+        tone(TONE_PIN, KEYPAD_TONE, TONE_DURATION);
         break;
       case MICROPHONE:
         DP_PRINTLN("Speak it!");
+        tone(TONE_PIN, VOICE_TONE, TONE_DURATION);
         break;
     }
-
+    DISPLAY();
     next_state = HANDLE_INPUT;
   }
   else{
@@ -194,9 +207,10 @@ void wait_and_select_input(){
 
 void handle_input(){
 
-  reset_display();
+//  reset_display();
   
   DP_PRINTLN("handling input");
+  DISPLAY();
   delay(100);
   
 
@@ -206,7 +220,7 @@ void handle_input(){
       break;
     case KEYPAD:
       over = keypad_logic();
-      break
+      break;
     case MICROPHONE:
       over = get_voice_input();
       break;
@@ -215,15 +229,24 @@ void handle_input(){
 }
 
 bool get_voice_input(){
+  reset_display();
   DP_PRINTLN("Voice recognition");
   DP_PRINTLN("Speak into the microphone");
+  DISPLAY();
   bool g_over = true;
-  
+  int current = 0;
+  delay(50);
   while(g_over){
-    int current = analogRead(MIC_IN);
+    current = analogRead(MIC_IN);
+    display.println(current);
+    DISPLAY();
     g_over = current<=background_sound;
+    
+    reset_display();
   }
-  
+      display.println(current);
+    DISPLAY();
+    delay(500);
   return g_over;
 }
 
@@ -235,25 +258,27 @@ bool keypad_logic(){
   while(1){
     char key = keypad.getKey();
     if (key){
-      Serial.println(key);
+      display.print(key);
   
       if(key == '*') {
         input_password = ""; // clear input password
       } else if(key == '#') {
         if(password == input_password) {
-          Serial.println("password is correct");
+          DP_PRINTLN("password is correct");
           password = randompasscode();        
-          Serial.println("generating new passcode " + password);
+          DP_PRINTLN("generating new passcode ");
+          DISPLAY();
           return false;
         } else {
-          Serial.println("password is incorrect, try again");
-          return true;
+          DP_PRINTLN("password is incorrect, try again");
+          DISPLAY();
         }
   
         input_password = ""; // clear input password
       } else {
         input_password += key; // append new character to input password string
       }
+      DISPLAY();
     }
   }
 }
@@ -270,4 +295,3 @@ String randompasscode(){
 
   return pass;
 }
-

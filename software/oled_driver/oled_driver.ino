@@ -1,3 +1,9 @@
+#include <Talkie.h>
+#include "Vocab_Soundbites.h"
+#include <TalkieUtils.h>
+#include <Vocab_US_Large.h>
+#include <Vocab_Special.h>
+
 ///////////////////////////////////////////////
 // DEFINITIONS FOR OLED DRIVER
 ///////////////////////////////////////////////
@@ -6,7 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1305.h>
 
-#define OLED_CLK A0
+#define OLED_CLK A0 
 #define OLED_MOSI 10
 #define SSD1305_128_64
 #define OLED_CS 9
@@ -18,10 +24,6 @@ Adafruit_SSD1305 display(128, 64, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED
 // FINGERPRINT SENSOR
 ///////////////////////////////////////////////
 
-#include <Adafruit_Fingerprint.h>
-#define mySerial Serial
-Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
-
 // Utilities: 
 
 // define print functions for use w/ screen
@@ -29,11 +31,14 @@ Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 #define DP_PRINT(x) display.print(F(x))       //use F(X) to save the string to Flash
 
 
+Talkie voice;
 
 void setup() {
   Serial.begin(9600);
   while (! Serial) delay(100);
   display.println("SSD1305 OLED test");
+
+  display.setRotation(2);
   
   if ( ! display.begin(0x3C) ) {
      display.println("Unable to initialize OLED");
@@ -45,27 +50,7 @@ void setup() {
   delay(4);
   display.clearDisplay();   // clears the screen and buffer
 
-  // set the data rate for the sensor serial port
-  finger.begin(57600);
-  delay(5);
-  finger.LEDcontrol(FINGERPRINT_LED_FLASHING, 25, FINGERPRINT_LED_RED, 10);
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  // set the data rate for the sensor serial port
-  if (finger.verifyPassword()) {
-    DP_PRINTLN("Found fingerprint sensor!");
-    display.display();
-    delay(300);
-    display.clearDisplay();
-  } else {
-    DP_PRINTLN("Did not find fingerprint sensor :(");
-    display.display();
-    delay(300);
-    display.clearDisplay();
-    while (!finger.verifyPassword()) { delay(1); }
-    
-  }
+  tone(3, 400, 100);
 
 }
 
