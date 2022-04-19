@@ -115,6 +115,15 @@ int background_sound = 0;
 
 ////////////////////////////////////
 
+////////////////////////////////////
+//          TOUCH SENSOR          //
+////////////////////////////////////
+
+#define touchsensor 2
+int current_touchstate = LOW;
+
+////////////////////////////////////
+
 void reset_display(){
   #ifdef OLED
   display.clearDisplay(); //use this to clear display
@@ -140,6 +149,8 @@ void setup() {
 
   background_sound = 1.30*analogRead(MIC_IN);
   input_password.reserve(32); // maximum input characters is 33, change if needed
+
+  pinMode(touchsensor, INPUT);
 }
 
 void loop() {
@@ -202,7 +213,7 @@ void handle_input(){
 
   switch(input){
     case FINGERPRINT_SCANNER:
-      //call fingerprint scanner fn
+      over = fingerprint_scanner_input();
       break;
     case KEYPAD:
       over = keypad_logic();
@@ -271,3 +282,11 @@ String randompasscode(){
   return pass;
 }
 
+bool fingerprint_scanner_input(){
+  while(1){
+      if(current_touchstate != digitalRead(touchsensor)
+      {
+        return false;
+      }
+  }
+}
