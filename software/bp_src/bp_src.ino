@@ -305,7 +305,9 @@ bool fingerprint_scanner_input(){
   while(1){
       if(current_touchstate != digitalRead(touchsensor))
       {
+        DP_PRINTLN("GOOD!");
         current_touchstate = digitalRead(touchsensor);
+        delay(100);
         return false;
       }
   }
