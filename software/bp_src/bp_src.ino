@@ -55,7 +55,6 @@ String password = "1234"; // change your password here
 String input_password;
 bool getcode = false;
 
-
 ///////////////////////////////////
 //        GAME SETTINGS          //
 ///////////////////////////////////
@@ -67,8 +66,6 @@ bool getcode = false;
 #define VOICE_TONE 400
 #define TONE_DURATION 100
 #define TONE_PIN 3
-
-int delay_ms = START_DELAY;
 
 ///////////////////////////////////
 //    STATES FOR STATE MACHINE   //
@@ -97,14 +94,16 @@ enum inputs {
   MICROPHONE
 };
 
-
 State states[] = {start_screen, handle_input, wait_and_select_input, game_over};
 
-inputs input = (inputs)0;
+inputs input      = (inputs)0;
 int current_state = START_SCREEN;
-int next_state = 0;
-int score = 0;
-bool over = false;
+int next_state    = 0;
+int score         = 0;
+bool over         = false;
+
+int timeout       = 0;
+int time_step     = 0;
 
 ////////////////////////////////////
 //          MICROPHONE            //
@@ -120,11 +119,9 @@ int background_sound = 0;
 ////////////////////////////////////
 //          TOUCH SENSOR          //
 ////////////////////////////////////
-
 #define touchsensor 2
 int current_touchstate = LOW;
 
-////////////////////////////////////
 
 void reset_display(){
   #ifdef OLED
@@ -151,8 +148,10 @@ void setup() {
   #endif
 
   reset_display();
-
+  
+  current_touchstate = digitalRead(touchsensor);
   background_sound = BG_SCALE*analogRead(MIC_IN);
+  
   display.println(analogRead(MIC_IN));
   display.println(background_sound);
   display.display();
@@ -176,23 +175,24 @@ bool check_start_input(){
 
 void start_screen() {
   reset_display();
+  current_touchstate == digitalRead(touchsensor);
   
   DP_PRINTLN("Disarm-it!");
   DP_PRINTLN("Scan finger to start...");
   DISPLAY();
 
-  while(!check_start_input()){}
+  fingerprint_scanner_input();
 
   next_state = WAIT_AND_SELECT_INPUT;
 }
 
 void wait_and_select_input(){
   reset_display();
-
+  current_touchstate == digitalRead(touchsensor);
   
   if(!over && score < 100){
     input = rand()%NUM_INPUTS;
-    delay(delay_ms);
+    
     switch(input){
       case FINGERPRINT_SCANNER:
         DP_PRINTLN("Scan it!");
@@ -217,14 +217,7 @@ void wait_and_select_input(){
 
 
 void handle_input(){
-
-//  reset_display();
   
-  DP_PRINTLN("handling input");
-  DISPLAY();
-  delay(100);
-  
-
   switch(input){
     case FINGERPRINT_SCANNER:
       over = fingerprint_scanner_input();
@@ -244,9 +237,12 @@ bool get_voice_input(){
   DP_PRINTLN("Voice recognition");
   DP_PRINTLN("Speak into the microphone");
   DISPLAY();
+  
   bool g_over = true;
   int current = 0;
+  
   delay(50);
+  
   while(g_over){
     current = analogRead(MIC_IN);
     display.println(current);
@@ -275,9 +271,7 @@ bool keypad_logic(){
         input_password = ""; // clear input password
       } else if(key == '#') {
         if(password == input_password) {
-          DP_PRINTLN("password is correct");
-          password = randompasscode();        
-          DP_PRINTLN("generating new passcode ");
+          DP_PRINTLN("Corrects!");      
           DISPLAY();
           return false;
         } else {
@@ -309,8 +303,9 @@ String randompasscode(){
 
 bool fingerprint_scanner_input(){
   while(1){
-      if(current_touchstate != digitalRead(touchsensor)
+      if(current_touchstate != digitalRead(touchsensor))
       {
+        current_touchstate = digitalRead(touchsensor);
         return false;
       }
   }
