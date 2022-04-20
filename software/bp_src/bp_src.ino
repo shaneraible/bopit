@@ -101,8 +101,8 @@ int next_state    = 0;
 int score         = 0;
 bool over         = false;
 
-int timeout       = 0;
-int time_step     = 0;
+long timeout       = 0;
+int time_step     = 10000;
 
 ////////////////////////////////////
 //          MICROPHONE            //
@@ -175,6 +175,7 @@ bool check_start_input(){
 void start_screen() {
   reset_display();
   current_touchstate == digitalRead(touchsensor);
+  background_sound = BG_SCALE*analogRead(MIC_IN);
   
   DP_PRINTLN("Disarm-it!");
   DP_PRINTLN("Scan finger to start...");
@@ -183,7 +184,7 @@ void start_screen() {
   DP_PRINTLN(" for the entire game.");
   DISPLAY();
 
-  fingerprint_scanner_input();
+  while(current_touchstate == digitalRead(touchsensor)){};
 
   next_state = WAIT_AND_SELECT_INPUT;
 }
@@ -195,9 +196,6 @@ void wait_and_select_input(){
   if(!over && score < 100){
     input = rand()%NUM_INPUTS;
 
-    DP_PRINTLN("GETTING NEW INPUT");
-    DISPLAY();
-    delay(1000);
     switch(input){
       case FINGERPRINT_SCANNER:
         DP_PRINTLN("Scan it!");
@@ -213,6 +211,9 @@ void wait_and_select_input(){
         break;
     }
     DISPLAY();
+    delay(1500);
+    
+    timeout = millis() + time_step;
     next_state = HANDLE_INPUT;
   }
   else{
@@ -222,7 +223,6 @@ void wait_and_select_input(){
 
 
 void handle_input(){
-  
   switch(input){
     case FINGERPRINT_SCANNER:
       over = fingerprint_scanner_input();
@@ -234,12 +234,28 @@ void handle_input(){
       over = get_voice_input();
       break;
   }
+
+ 
+  //delay until next state
+  while(!over && millis() < timeout){
+    reset_display();
+    DP_PRINTLN("Level disarmed!");
+    DP_PRINT("Next level in ");
+    long s = (timeout - millis())/1000;
+    display.print(s);
+    DP_PRINTLN("s");
+    DISPLAY();
+    
+  };
+  time_step = time_step - 25;
+
+  if(!over) score++;
+  
   next_state = WAIT_AND_SELECT_INPUT;
 }
 
 bool get_voice_input(){
-  reset_display();
-  DP_PRINTLN("Voice recognition");
+  DP_PRINTLN("Voice recognition...");
   DP_PRINTLN("Speak into the microphone");
   DISPLAY();
   
@@ -248,21 +264,18 @@ bool get_voice_input(){
   
   delay(50);
   
-  while(g_over){
+  while(g_over && millis() < timeout){
+    display.print(millis());
+
     current = analogRead(MIC_IN);
-    display.println(current);
-    DISPLAY();
+    display.print(current);
     g_over = current<=background_sound;
-    
-    reset_display();
   }
-      display.println(current);
-    DISPLAY();
-    delay(500);
   return g_over;
 }
 
 void game_over(){
+  tone(TONE_PIN, 100, 1000);
   DP_PRINTLN("GAME OVER!");
   DP_PRINT("YOUR SCORE IS: ");
   display.print(score);
@@ -276,7 +289,7 @@ bool keypad_logic(){
   input_password = ""; // clear input password
   DP_PRINTLN("Enter password below:");
   
-  while(1){
+  while(millis() < timeout){
     char key = keypad.getKey();
     if (key){
       display.print(key);
@@ -304,6 +317,8 @@ bool keypad_logic(){
       DISPLAY();
     }
   }
+
+  return true;
 }
 
 String randompasscode(){
@@ -320,11 +335,13 @@ String randompasscode(){
 }
 
 bool fingerprint_scanner_input(){
-  while(1){
+  while(millis() < timeout){
       if(current_touchstate != digitalRead(touchsensor))
       {
         current_touchstate = digitalRead(touchsensor);
         return false;
       }
   }
+
+  return true;
 }
