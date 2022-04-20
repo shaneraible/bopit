@@ -185,6 +185,12 @@ void start_screen() {
   DISPLAY();
 
   while(current_touchstate == digitalRead(touchsensor)){};
+  
+  reset_display();
+  for (uint8_t i=0; i<display.height()/2; i+=2) {
+    display.drawRect(i, i, display.width()-2*i, display.height()-2*i, WHITE);
+    display.display();
+  }
 
   next_state = WAIT_AND_SELECT_INPUT;
 }
