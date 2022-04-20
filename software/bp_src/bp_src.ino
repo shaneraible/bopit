@@ -108,7 +108,7 @@ int time_step     = 10000;
 //          MICROPHONE            //
 ////////////////////////////////////
 #define MIC_IN A5
-#define BG_SCALE 1.1
+#define BG_SCALE 1.2
 
 bool get_voice_input();
 int background_sound = 0;
@@ -241,7 +241,8 @@ void handle_input(){
       break;
   }
 
- 
+   if(!over) score++;
+  
   //delay until next state
   while(!over && millis() < timeout){
     reset_display();
@@ -250,13 +251,14 @@ void handle_input(){
     long s = (timeout - millis())/1000;
     display.print(s);
     DP_PRINTLN("s");
+    DP_PRINT("Your score is ");
+    display.println(score);
     DISPLAY();
     
   };
   time_step = time_step - 25;
 
-  if(!over) score++;
-  
+
   next_state = WAIT_AND_SELECT_INPUT;
 }
 
@@ -282,6 +284,8 @@ bool get_voice_input(){
 
 void game_over(){
   tone(TONE_PIN, 100, 1000);
+
+  
   DP_PRINTLN("GAME OVER!");
   DP_PRINT("YOUR SCORE IS: ");
   display.print(score);
