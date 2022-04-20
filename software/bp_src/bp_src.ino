@@ -194,7 +194,10 @@ void wait_and_select_input(){
   
   if(!over && score < 100){
     input = rand()%NUM_INPUTS;
-    
+
+    DP_PRINTLN("GETTING NEW INPUT");
+    DISPLAY();
+    delay(1000);
     switch(input){
       case FINGERPRINT_SCANNER:
         DP_PRINTLN("Scan it!");
@@ -260,20 +263,32 @@ bool get_voice_input(){
 }
 
 void game_over(){
-  
+  DP_PRINTLN("GAME OVER!");
+  DP_PRINT("YOUR SCORE IS: ");
+  display.print(score);
+  DISPLAY();
+
+  delay(10000);
+  next_state = START_SCREEN;
 }
 
 bool keypad_logic(){
   input_password = ""; // clear input password
+  DP_PRINTLN("Enter password below:");
+  
   while(1){
     char key = keypad.getKey();
     if (key){
       display.print(key);
-  
+
       if(key == '*') {
         input_password = ""; // clear input password
+        reset_display();
+        DP_PRINTLN("Enter password below:");
+        DISPLAY();
       } else if(key == '#') {
         if(password == input_password) {
+          DP_PRINTLN("");
           DP_PRINTLN("password is correct");
           DISPLAY();
           return false;
@@ -308,9 +323,7 @@ bool fingerprint_scanner_input(){
   while(1){
       if(current_touchstate != digitalRead(touchsensor))
       {
-        DP_PRINTLN("GOOD!");
         current_touchstate = digitalRead(touchsensor);
-        delay(100);
         return false;
       }
   }
