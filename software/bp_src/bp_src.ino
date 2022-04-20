@@ -50,8 +50,8 @@ byte pin_rows[ROW_NUM] = {A3, 7, 6, 4}; //connect to the row pinouts of the keyp
 byte pin_column[COLUMN_NUM] = {A4, A2, 5}; //connect to the column pinouts of the keypad
 
 Keypad keypad = Keypad( makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM );
-
-String password = "1234"; // change your password here
+String randompasscode();
+String password = randompasscode(); // change your password here
 String input_password;
 bool getcode = false;
 
@@ -78,7 +78,6 @@ void handle_input();
 void wait_and_select_input();
 void game_over();
 bool keypad_logic();
-String randompasscode();
 
 enum states {
   START_SCREEN,
@@ -179,6 +178,9 @@ void start_screen() {
   
   DP_PRINTLN("Disarm-it!");
   DP_PRINTLN("Scan finger to start...");
+  DP_PRINT("Passcode is ");
+  display.print(password);
+  DP_PRINTLN(" for the entire game.");
   DISPLAY();
 
   fingerprint_scanner_input();
@@ -262,6 +264,7 @@ void game_over(){
 }
 
 bool keypad_logic(){
+  input_password = ""; // clear input password
   while(1){
     char key = keypad.getKey();
     if (key){
@@ -271,7 +274,7 @@ bool keypad_logic(){
         input_password = ""; // clear input password
       } else if(key == '#') {
         if(password == input_password) {
-          DP_PRINTLN("Corrects!");      
+          DP_PRINTLN("password is correct");
           DISPLAY();
           return false;
         } else {
