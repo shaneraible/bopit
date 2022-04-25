@@ -1,0 +1,24 @@
+Removed Pin From Net: NetName=3.3V Pin=J2-1
+Removed Pin From Net: NetName=pd2_irq Pin=J2-2
+Removed Pin From Net: NetName=3.3V Pin=J2-3
+Removed Pin From Net: NetName=pd0_rx Pin=J2-4
+Removed Pin From Net: NetName=pd1_tx Pin=J2-5
+Removed Pin From Net: NetName=GND Pin=J2-6
+Change Component Footprint: Designator=J2 Old Footprint=TE_282837-6 New Footprint=MOLEX_530470610
+Change Component Comment : Designator=J2 Old Comment=282837-6 New Comment=530470610
+Change component parameters: Designator = "J2" ("J2"); Footprint = "TE_282837-6"; UniqueID = "\MQUVBKKR" ("\MQUVBKKR")
+Change component parameters (AddParameter): Name = "Availability"; Value = "In Stock"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/530470610/Molex/view-part/4701665/?ref=eda"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "MF"; Value = "Molex"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "MP"; Value = "530470610"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "Package"; Value = "None"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "Price"; Value = "None"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/530470610/Molex/view-part/4701665/?ref=snap"; VariantName = "[No Variations]"
+Change component parameters (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Added Pin To Net: NetName=GND Pin=J2-1
+Added Pin To Net: NetName=pd1_tx Pin=J2-2
+Added Pin To Net: NetName=pd0_rx Pin=J2-3
+Added Pin To Net: NetName=3.3V Pin=J2-4
+Added Pin To Net: NetName=pd2_irq Pin=J2-5
+Added Pin To Net: NetName=3.3V Pin=J2-6
+Added Room: Name=disarm_it_schem
